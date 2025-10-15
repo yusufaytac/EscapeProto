@@ -21,7 +21,8 @@ void URotatorComponent::BeginPlay()
 	Super::BeginPlay();
 
 	StartRotation = GetOwner()->GetActorRotation();
-	
+	SetShouldMove(false);
+
 }
 
 
@@ -29,14 +30,7 @@ void URotatorComponent::BeginPlay()
 void URotatorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (ShouldMove)
-	{
-		TargetRotation = StartRotation + TargetRotationAngle;
-	}
-	else
-	{
-		TargetRotation = StartRotation;
-	}
+
 
 	FRotator CurrentRotation = GetOwner()->GetActorRotation();
 
@@ -49,6 +43,24 @@ void URotatorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		FRotator NewRotation = FMath::RInterpConstantTo(CurrentRotation, TargetRotation, DeltaTime, RotationInterpSpeed);
 
 		GetOwner()->SetActorRotation(NewRotation);
+	}
+}
+
+bool URotatorComponent::GetShouldMove()
+{
+	return ShouldMove;
+}
+
+void URotatorComponent::SetShouldMove(bool NewShouldMove)
+{
+	ShouldMove = NewShouldMove;
+	if (ShouldMove)
+	{
+		TargetRotation = StartRotation + TargetRotationAngle;
+	}
+	else
+	{
+		TargetRotation = StartRotation;
 	}
 }
 

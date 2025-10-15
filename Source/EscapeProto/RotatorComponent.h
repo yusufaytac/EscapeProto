@@ -30,12 +30,19 @@ public:
 	UPROPERTY(EditAnywhere)
 	float RotationInterpSpeed = 30.0f;
 
-	UPROPERTY(EditAnywhere)
-	bool ShouldMove = false;
+	
 
 	UPROPERTY(VisibleAnywhere)
 	bool ReachedTarget = false;
 
 	FRotator TargetRotation;
 	FRotator StartRotation;
+
+	bool GetShouldMove();
+	void SetShouldMove(bool NewShouldMove);
+
+private:
+
+	UPROPERTY(VisibleAnywhere)
+	bool ShouldMove = false;
 };
