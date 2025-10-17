@@ -27,7 +27,7 @@ void ALock::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	SetIsKeyPlaced(true);
+	SetIsKeyPlaced(false);
 	
 }
 

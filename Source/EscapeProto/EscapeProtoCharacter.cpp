@@ -9,6 +9,8 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EscapeProto.h"
+#include "CollectableItem.h"
+#include "Lock.h"
 
 AEscapeProtoCharacter::AEscapeProtoCharacter()
 {
@@ -59,10 +61,79 @@ void AEscapeProtoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AEscapeProtoCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AEscapeProtoCharacter::LookInput);
+		
+		//
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AEscapeProtoCharacter::Interact);
 	}
 	else
 	{
 		UE_LOG(LogEscapeProto, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+
+void AEscapeProtoCharacter::Interact()
+{
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + (FirstPersonCameraComponent->GetForwardVector() * MaxInteractionDistance);
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 5.0f);
+
+	FCollisionShape InteractionSphere = FCollisionShape::MakeSphere(InteractionSphereRadius);
+	DrawDebugSphere(GetWorld(), End, InteractionSphereRadius, 20, FColor::Blue, false, 5.0f);
+
+	
+	FHitResult HitResult;
+	bool HasHit = GetWorld()->SweepSingleByChannel(HitResult, 
+		Start, End, 
+		FQuat::Identity, 
+		ECC_GameTraceChannel2, 
+		InteractionSphere);
+
+	if (HasHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		
+		if (HitActor->ActorHasTag("CollectableItem"))
+		{
+			ACollectableItem* CollectableItem = Cast<ACollectableItem>(HitActor);
+			if (CollectableItem)
+			{
+				ItemList.Add(CollectableItem->ItemName);
+				CollectableItem->Destroy();
+
+			}
+		}
+
+		else if (HitActor->ActorHasTag("Lock"))
+		{
+			ALock* LockActor = Cast<ALock>(HitActor);
+			if (LockActor)
+			{
+				if (!LockActor->GetIsKeyPlaced())
+				{
+					int32 ItemRemoved = ItemList.RemoveSingle(LockActor->KeyItemName);
+					if (ItemRemoved)
+					{
+						LockActor->SetIsKeyPlaced(true);
+
+					}
+					else
+					{
+
+					}
+
+				}
+				else
+				{
+					ItemList.Add(LockActor->KeyItemName);
+					LockActor->SetIsKeyPlaced(false);
+				}
+			}
+		}
+	}
+	else
+	{
+
 	}
 }
 
